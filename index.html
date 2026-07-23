@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Générateur de Comptes Riot</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f1923; /* Couleur sombre style Valorant */
+            color: #ece8e1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: #1e2833;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #ff4655; /* Rouge Valorant */
+            margin-bottom: 20px;
+        }
+
+        .btn-generate {
+            background-color: #ff4655;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .btn-generate:hover {
+            background-color: #ff6b77;
+        }
+
+        .btn-generate:disabled {
+            background-color: #888;
+            cursor: not-yet;
+        }
+
+        .result-box {
+            background-color: #0f1923;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: left;
+            display: none; /* Caché par défaut */
+            border: 1px solid #ff4655;
+        }
+
+        .result-box.show {
+            display: block;
+        }
+
+        .result-item {
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        .label {
+            font-weight: bold;
+            color: #ff4655;
+        }
+
+        .value {
+            word-break: break-all;
+        }
+
+        .loader {
+            display: none;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #ff4655;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status {
+            margin-top: 10px;
+            font-style: italic;
+            color: #ccc;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🎮 Générateur de Comptes Riot</h1>
+    <p>Créez un compte Valorant frais avec email jetable</p>
+
+    <button id="generateBtn" class="btn-generate">Générer un Compte</button>
+    
+    <div id="loader" class="loader"></div>
+    <p id="statusText" class="status"></p>
+
+    <div id="resultBox" class="result-box">
+        <h3 style="color: #ff4655; margin-top: 0;">Compte Créé !</h3>
+        <div class="result-item">
+            <span class="label">Nom d'utilisateur :</span>
+            <span id="username" class="value"></span>
+        </div>
+        <div class="result-item">
+            <span class="label">Email :</span>
+            <span id="email" class="value"></span>
+        </div>
+        <div class="result-item">
+            <span class="label">Mot de passe Riot :</span>
+            <span id="password" class="value"></span>
+        </div>
+        <div class="result-item">
+            <span class="label">Mot de passe Email :</span>
+            <span id="emailPassword" class="value"></span>
+        </div>
+        <div class="result-item">
+            <span class="label">Statut validation :</span>
+            <span id="validationStatus" class="value"></span>
+        </div>
+        <div class="result-item">
+            <span class="label">Créé le :</span>
+            <span id="createdAt" class="value"></span>
+        </div>
+    </div>
+</div>
+
+<script>
+    const generateBtn = document.getElementById('generateBtn');
+    const loader = document.getElementById('loader');
+    const statusText = document.getElementById('statusText');
+    const resultBox = document.getElementById('resultBox');
+
+    generateBtn.addEventListener('click', async () => {
+        // Réinitialiser l'affichage
+        resultBox.classList.remove('show');
+        loader.style.display = 'block';
+        statusText.textContent = 'Création en cours... Veuillez patienter (jusqu\'à 60s)';
+        generateBtn.disabled = true;
+
+        try {
+            const response = await fetch('/api/generate', {
+                method: 'POST'
+            });
+
+            const data = await response.json();
+
+            loader.style.display = 'none';
+            generateBtn.disabled = false;
+
+            if (data.success) {
+                // Remplir les champs avec les données du compte
+                document.getElementById('username').textContent = data.riot_username;
+                document.getElementById('email').textContent = data.riot_email;
+                document.getElementById('password').textContent = data.riot_password;
+                document.getElementById('emailPassword').textContent = data.email_password;
+                document.getElementById('validationStatus').textContent = data.validation_status;
+                document.getElementById('createdAt').textContent = data.created_at;
+                
+                // Afficher la boîte de résultat
+                resultBox.classList.add('show');
+                statusText.textContent = 'Succès !';
+                statusText.style.color = '#4caf50';
+            } else {
+                statusText.textContent = 'Erreur : ' + data.message;
+                statusText.style.color = '#ff4655';
+            }
+
+        } catch (error) {
+            loader.style.display = 'none';
+            generateBtn.disabled = false;
+            statusText.textContent = 'Erreur de connexion au serveur : ' + error.message;
+            statusText.style.color = '#ff4655';
+        }
+    });
+</script>
+
+</body>
+</html>
